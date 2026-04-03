@@ -8,21 +8,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRequests } from "@/hooks/useRealtime";
 import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { createRequest } from "@/lib/database";
+import { Card, Button, Input, Select, Table, TableRow, TableCell, EmptyTableState, Badge, Alert, useToast } from "@/components/ui";
 
 export default function ReceptionistDashboard() {
   const { user, loading: authLoading } = useAuth();
   const { requests, loading, refetch } = useRealtimeRequests();
+  const { showToast } = useToast();
   const [patientName, setPatientName] = useState("");
   const [severity, setSeverity] = useState("medium");
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setSubmitting(true);
-    setMessage("");
 
     try {
       await createRequest({
@@ -33,40 +33,39 @@ export default function ReceptionistDashboard() {
 
       setPatientName("");
       setSeverity("medium");
-      setMessage("Request created successfully!");
+      showToast("Request created successfully!", "success");
       await refetch();
-
-      setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to create request");
+      const message = error instanceof Error ? error.message : "Failed to create request";
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): "default" | "success" | "warning" | "danger" | "info" => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "warning";
       case "assigned":
-        return "bg-blue-100 text-blue-800";
+        return "info";
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "success";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "default";
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityVariant = (severity: string): "default" | "success" | "warning" | "danger" | "info" => {
     switch (severity) {
       case "critical":
-        return "text-red-600 font-semibold";
+        return "danger";
       case "medium":
-        return "text-yellow-600 font-semibold";
+        return "warning";
       case "low":
-        return "text-green-600";
+        return "success";
       default:
-        return "text-gray-600";
+        return "default";
     }
   };
 
@@ -83,102 +82,71 @@ export default function ReceptionistDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Create Request Form */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Create New Request</h3>
-
-            {message && (
-              <div
-                className={`mb-4 p-3 rounded ${
-                  message.includes("successfully")
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {message}
-              </div>
-            )}
-
+          <Card title="Create New Request">
             <form onSubmit={handleCreateRequest} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
-                <input
-                  type="text"
-                  value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
-                  placeholder="Enter patient name"
-                  required
-                  disabled={submitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Severity</label>
-                <select
-                  value={severity}
-                  onChange={(e) => setSeverity(e.target.value)}
-                  disabled={submitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
+              <Input
+                label="Patient Name"
+                type="text"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                placeholder="Enter patient name"
+                required
                 disabled={submitting}
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-medium py-2 rounded-lg transition"
+              />
+
+              <Select
+                label="Severity"
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+                disabled={submitting}
+                options={[
+                  { value: "low", label: "Low" },
+                  { value: "medium", label: "Medium" },
+                  { value: "critical", label: "Critical" },
+                ]}
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                isLoading={submitting}
               >
-                {submitting ? "Creating..." : "Create Request"}
-              </button>
+                Create Request
+              </Button>
             </form>
-          </div>
+          </Card>
         </div>
 
         {/* Requests List */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">All Requests</h3>
-
+          <Card title="All Requests">
             {loading ? (
-              <p className="text-gray-500">Loading requests...</p>
+              <p className="text-gray-500 dark:text-gray-400">Loading requests...</p>
             ) : requests.length === 0 ? (
-              <p className="text-gray-500">No requests yet.</p>
+              <EmptyTableState message="No requests yet." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100 border-b">
-                    <tr>
-                      <th className="px-4 py-2 text-left font-semibold">Patient</th>
-                      <th className="px-4 py-2 text-left font-semibold">Severity</th>
-                      <th className="px-4 py-2 text-left font-semibold">Status</th>
-                      <th className="px-4 py-2 text-left font-semibold">Hospital</th>
-                      <th className="px-4 py-2 text-left font-semibold">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {requests.map((req) => (
-                      <tr key={req.id} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-900">{req.patient_name}</td>
-                        <td className={`px-4 py-3 ${getSeverityColor(req.severity)}`}>{req.severity}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(req.status)}`}>
-                            {req.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-900">{req.assigned_hospital || "-"}</td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">
-                          {new Date(req.created_at).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table headers={["Patient", "Severity", "Status", "Hospital", "Created"]}>
+                {requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="font-medium">{req.patient_name}</TableCell>
+                    <TableCell>
+                      <Badge variant={getSeverityVariant(req.severity)} size="sm">
+                        {req.severity.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(req.status)} size="sm">
+                        {req.status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{req.assigned_hospital || "-"}</TableCell>
+                    <TableCell className="text-xs">{new Date(req.created_at).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))}
+              </Table>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </DashboardLayoutNew>

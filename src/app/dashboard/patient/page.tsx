@@ -10,6 +10,7 @@ import { useRealtimeRequests } from "@/hooks/useRealtime";
 import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { Request } from "@/lib/database";
 import { fetchUserRequests } from "@/lib/database";
+import { Table, TableRow, TableCell, EmptyTableState, Badge } from "@/components/ui";
 
 export default function PatientDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -23,29 +24,29 @@ export default function PatientDashboard() {
     }
   }, [user, allRequests]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): "default" | "success" | "warning" | "danger" | "info" => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "warning";
       case "assigned":
-        return "bg-blue-100 text-blue-800";
+        return "info";
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "success";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "default";
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityVariant = (severity: string): "default" | "success" | "warning" | "danger" | "info" => {
     switch (severity) {
       case "critical":
-        return "text-red-600 font-semibold";
+        return "danger";
       case "medium":
-        return "text-yellow-600 font-semibold";
+        return "warning";
       case "low":
-        return "text-green-600";
+        return "success";
       default:
-        return "text-gray-600";
+        return "default";
     }
   };
 
@@ -61,38 +62,27 @@ export default function PatientDashboard() {
     <DashboardLayoutNew title="My Requests">
       <div className="grid gap-6">
         {userRequests.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p>You have no requests yet.</p>
-          </div>
+          <EmptyTableState message="You have no requests yet." />
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Request ID</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Severity</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Assigned Hospital</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userRequests.map((req) => (
-                  <tr key={req.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{req.id.substring(0, 8)}...</td>
-                    <td className={`px-6 py-4 text-sm ${getSeverityColor(req.severity)}`}>{req.severity.toUpperCase()}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(req.status)}`}>
-                        {req.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{req.assigned_hospital || "Not assigned"}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{new Date(req.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table headers={["Request ID", "Severity", "Status", "Assigned Hospital", "Created"]}>
+            {userRequests.map((req) => (
+              <TableRow key={req.id}>
+                <TableCell className="text-xs font-mono">{req.id.substring(0, 8)}...</TableCell>
+                <TableCell>
+                  <Badge variant={getSeverityVariant(req.severity)} size="sm">
+                    {req.severity.toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusVariant(req.status)} size="sm">
+                    {req.status.toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell>{req.assigned_hospital || "Not assigned"}</TableCell>
+                <TableCell className="text-sm">{new Date(req.created_at).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </Table>
         )}
       </div>
     </DashboardLayoutNew>

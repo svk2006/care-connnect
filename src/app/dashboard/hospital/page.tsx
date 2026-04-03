@@ -6,13 +6,15 @@ import { useState, useEffect } from "react";
 import { useRealtimeHospitals, useRealtimeRequests } from "@/hooks/useRealtime";
 import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { updateHospital, Hospital } from "@/lib/database";
+import { Card, Button, Input, Table, TableRow, TableCell, EmptyTableState, Badge, Alert, useToast } from "@/components/ui";
+import { Bed, MapPin, Users } from "lucide-react";
 
 export default function HospitalAdminDashboard() {
   const { hospitals, loading: hospitalsLoading } = useRealtimeHospitals();
   const { requests } = useRealtimeRequests();
+  const { showToast } = useToast();
   const [editingHospital, setEditingHospital] = useState<Hospital | null>(null);
   const [newBedsCount, setNewBedsCount] = useState("");
-  const [message, setMessage] = useState("");
 
   const getAssignedPatients = (hospitalId: string) => {
     return requests.filter((r) => r.assigned_hospital === hospitalId && r.status === "assigned");
@@ -26,13 +28,12 @@ export default function HospitalAdminDashboard() {
         available_beds: parseInt(newBedsCount),
       });
 
-      setMessage("Beds updated successfully!");
+      showToast("Beds updated successfully!", "success");
       setEditingHospital(null);
       setNewBedsCount("");
-
-      setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to update beds");
+      const message = error instanceof Error ? error.message : "Failed to update beds";
+      showToast(message, "error");
     }
   };
 
@@ -44,131 +45,142 @@ export default function HospitalAdminDashboard() {
     );
   }
 
+  const assignedRequestsCount = requests.filter((r) => r.status === "assigned").length;
+
   return (
     <DashboardLayoutNew title="Hospital Admin Dashboard">
       <div className="grid gap-6">
-        {message && (
-          <div
-            className={`p-4 rounded-lg ${
-              message.includes("successfully")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        {/* Hospital Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {hospitals.map((hospital) => {
-            const assignedPatients = getAssignedPatients(hospital.id);
-            return (
-              <div key={hospital.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">{hospital.name}</h3>
-
-                <div className="space-y-3 mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Available Beds:</span>
-                    <span className="font-semibold text-blue-600">{hospital.available_beds}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Emergency Capacity:</span>
-                    <span className="font-semibold text-red-600">{hospital.emergency_capacity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Location:</span>
-                    <span className="font-semibold text-gray-700">{hospital.location}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Assigned Patients:</span>
-                    <span className="font-semibold text-purple-600">{assignedPatients.length}</span>
-                  </div>
-                </div>
-
-                {editingHospital?.id === hospital.id ? (
-                  <div className="space-y-2">
-                    <input
-                      type="number"
-                      value={newBedsCount}
-                      onChange={(e) => setNewBedsCount(e.target.value)}
-                      placeholder="New bed count"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleUpdateBeds}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 rounded transition"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingHospital(null);
-                          setNewBedsCount("");
-                        }}
-                        className="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-1 rounded transition"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditingHospital(hospital);
-                      setNewBedsCount(hospital.available_beds.toString());
-                    }}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition"
-                  >
-                    Update Beds
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        {/* Hospital Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card
+            title="Total Hospitals"
+            value={hospitals.length}
+            variant="info"
+          />
+          <Card
+            title="Total Available Beds"
+            value={hospitals.reduce((sum, h) => sum + h.available_beds, 0)}
+            icon={Bed}
+            variant="gradient"
+          />
+          <Card
+            title="Assigned Patients"
+            value={assignedRequestsCount}
+            icon={Users}
+            variant="success"
+          />
         </div>
 
-        {/* Assigned Patients Detail */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Assigned Patients Overview</h3>
+        {/* Hospital Cards */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Hospital Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hospitals.map((hospital) => {
+              const assignedPatients = getAssignedPatients(hospital.id);
+              const isEditing = editingHospital?.id === hospital.id;
 
-          {requests.filter((r) => r.status === "assigned").length === 0 ? (
-            <p className="text-gray-500">No patients currently assigned.</p>
+              return (
+                <div key={hospital.id} className="rounded-2xl shadow-lg p-6 transition-all hover:shadow-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{hospital.name}</h3>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <MapPin size={14} />
+                        {hospital.location}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 border-t border-gray-200 dark:border-slate-700 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Available Beds:</span>
+                        <span className="font-semibold text-cyan-600 dark:text-cyan-400">{hospital.available_beds}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Emergency Capacity:</span>
+                        <span className="font-semibold text-orange-600 dark:text-orange-400">{hospital.emergency_capacity}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Assigned Patients:</span>
+                        <Badge variant="info" size="sm">{assignedPatients.length}</Badge>
+                      </div>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-3 border-t border-gray-200 dark:border-slate-700 pt-4">
+                        <Input
+                          type="number"
+                          label="New Bed Count"
+                          value={newBedsCount}
+                          onChange={(e) => setNewBedsCount(e.target.value)}
+                          placeholder="Enter new bed count"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleUpdateBeds}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setEditingHospital(null);
+                              setNewBedsCount("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => {
+                          setEditingHospital(hospital);
+                          setNewBedsCount(hospital.available_beds.toString());
+                        }}
+                      >
+                        Update Beds
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Assigned Patients Table */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Assigned Patients Overview</h2>
+          {assignedRequestsCount === 0 ? (
+            <EmptyTableState message="No patients currently assigned." />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Patient</th>
-                    <th className="px-4 py-2 text-left font-semibold">Severity</th>
-                    <th className="px-4 py-2 text-left font-semibold">Status</th>
-                    <th className="px-4 py-2 text-left font-semibold">Assigned Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests
-                    .filter((r) => r.status === "assigned")
-                    .map((req) => (
-                      <tr key={req.id} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-900">{req.patient_name}</td>
-                        <td className={`px-4 py-3 font-semibold ${
-                          req.severity === "critical"
-                            ? "text-red-600"
-                            : req.severity === "medium"
-                            ? "text-yellow-600"
-                            : "text-green-600"
-                        }`}>
+            <div className="rounded-2xl shadow-lg p-6 transition-all hover:shadow-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+              <Table headers={["Patient", "Severity", "Status", "Hospital", "Assigned Date"]}>
+                {requests
+                  .filter((r) => r.status === "assigned")
+                  .map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell className="font-medium">{req.patient_name}</TableCell>
+                      <TableCell>
+                        <Badge variant={req.severity === "critical" ? "danger" : req.severity === "medium" ? "warning" : "success"} size="sm">
                           {req.severity.toUpperCase()}
-                        </td>
-                        <td className="px-4 py-3 text-gray-900">{req.status}</td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">
-                          {new Date(req.created_at).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="info" size="sm">{req.status.toUpperCase()}</Badge>
+                      </TableCell>
+                      <TableCell>{req.assigned_hospital}</TableCell>
+                      <TableCell className="text-xs">{new Date(req.created_at).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  ))}
+              </Table>
             </div>
           )}
         </div>

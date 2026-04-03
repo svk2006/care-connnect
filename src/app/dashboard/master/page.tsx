@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRealtimeRequests } from "@/hooks/useRealtime";
 import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { fetchAllUsers, updateUserRole, UserProfile } from "@/lib/database";
+import { Card, Badge, Button, Select, Alert } from "@/components/ui";
 
 const ROLES = ["patient", "receptionist", "hospital_admin", "operator", "government_admin", "master", "db_admin"];
 
@@ -61,100 +62,106 @@ export default function MasterDashboard() {
     <DashboardLayoutNew title="Master Admin">
       <div className="grid gap-6">
         {message && (
-          <div
-            className={`p-4 rounded-lg ${
-              message.includes("successfully")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message}
-          </div>
+          <Alert 
+            type={message.includes("successfully") ? "success" : "error"}
+            title={message.includes("successfully") ? "Success" : "Error"}
+            message={message}
+            dismissible
+          />
         )}
 
         {/* Users Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
-            <p className="text-sm font-medium opacity-90">Total Users</p>
-            <p className="text-4xl font-bold mt-2">{users.length}</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card 
+            title="Total Users" 
+            value={users.length} 
+            variant="info"
+          />
 
-          {ROLES.map((role) => (
-            <div key={role} className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow p-6 text-white">
-              <p className="text-sm font-medium opacity-90 capitalize">{role.replace("_", " ")}</p>
-              <p className="text-4xl font-bold mt-2">{users.filter((u) => u.role === role).length}</p>
-            </div>
-          ))}
+          <Card 
+            title="Patients" 
+            value={users.filter((u) => u.role === "patient").length} 
+            variant="success"
+          />
+
+          <Card 
+            title="Hospital Admins" 
+            value={users.filter((u) => u.role === "hospital_admin").length} 
+            variant="warning"
+          />
+
+          <Card 
+            title="Operators" 
+            value={users.filter((u) => u.role === "operator").length} 
+            variant="info"
+          />
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">All Users</h3>
-
+        <Card title="All Users">
           {users.length === 0 ? (
-            <p className="text-gray-500">No users found.</p>
+            <p className="text-gray-500 dark:text-gray-400">No users found.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
+              <table className="w-full text-sm">
+                <thead className="border-b dark:border-gray-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Current Role</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Email</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Role</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">{user.full_name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                    <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                      <td className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">{user.full_name}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant="info">
                           {user.role.replace("_", " ")}
-                        </span>
+                        </Badge>
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-4 py-3">
                         {editingUserId === user.id ? (
                           <div className="flex gap-2">
-                            <select
+                            <Select
                               value={selectedRole}
                               onChange={(e) => setSelectedRole(e.target.value)}
-                              className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="">Select role</option>
-                              {ROLES.map((role) => (
-                                <option key={role} value={role} className="capitalize">
-                                  {role.replace("_", " ")}
-                                </option>
-                              ))}
-                            </select>
-                            <button
+                              options={ROLES.map((role) => ({
+                                value: role,
+                                label: role.replace("_", " "),
+                              }))}
+                            />
+                            <Button
                               onClick={() => handleUpdateRole(user.id)}
-                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition"
+                              variant="primary"
+                              size="sm"
                             >
                               Save
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               onClick={() => {
                                 setEditingUserId(null);
                                 setSelectedRole("");
                               }}
-                              className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm transition"
+                              variant="secondary"
+                              size="sm"
                             >
                               Cancel
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <button
+                          <Button
                             onClick={() => {
                               setEditingUserId(user.id);
                               setSelectedRole(user.role);
                             }}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded text-sm transition"
+                            variant="primary"
+                            size="sm"
                           >
                             Edit
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -163,7 +170,7 @@ export default function MasterDashboard() {
               </table>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </DashboardLayoutNew>
   );
