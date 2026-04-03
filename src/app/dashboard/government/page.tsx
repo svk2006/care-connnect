@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useRealtimeHospitals, useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { getAnalytics } from "@/lib/loadBalancer";
 
 export default function GovernmentDashboard() {
@@ -10,9 +12,9 @@ export default function GovernmentDashboard() {
 
   if (hospitalsLoading || requestsLoading) {
     return (
-      <DashboardLayout title="Government Analytics">
+      <DashboardLayoutNew title="Government Analytics">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
@@ -25,7 +27,7 @@ export default function GovernmentDashboard() {
   const lowPercent = ((analytics.lowRequests / totalRequests) * 100).toFixed(1);
 
   return (
-    <DashboardLayout title="Government Analytics">
+    <DashboardLayoutNew title="Government Analytics">
       <div className="grid gap-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -164,6 +166,6 @@ export default function GovernmentDashboard() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

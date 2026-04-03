@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { unstable_noStore as noStore } from "next/cache";
+
+export const dynamic = "force-dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { createRequest } from "@/lib/database";
 
 export default function ReceptionistDashboard() {
@@ -69,14 +72,14 @@ export default function ReceptionistDashboard() {
 
   if (authLoading) {
     return (
-      <DashboardLayout title="Receptionist Dashboard">
+      <DashboardLayoutNew title="Receptionist Dashboard">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
   return (
-    <DashboardLayout title="Receptionist Dashboard">
+    <DashboardLayoutNew title="Receptionist Dashboard">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Create Request Form */}
         <div className="lg:col-span-1">
@@ -178,6 +181,6 @@ export default function ReceptionistDashboard() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

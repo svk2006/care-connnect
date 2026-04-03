@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useRealtimeHospitals, useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { fetchAllUsers } from "@/lib/database";
 import { useEffect, useState } from "react";
 
@@ -28,9 +30,9 @@ export default function DbAdminDashboard() {
 
   if (hospitalsLoading || requestsLoading || loading) {
     return (
-      <DashboardLayout title="DB Admin">
+      <DashboardLayoutNew title="DB Admin">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
@@ -45,7 +47,7 @@ export default function DbAdminDashboard() {
   }).length;
 
   return (
-    <DashboardLayout title="Database Admin - System Stats">
+    <DashboardLayoutNew title="Database Admin - System Stats">
       <div className="grid gap-6">
         {/* System Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -200,6 +202,6 @@ export default function DbAdminDashboard() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

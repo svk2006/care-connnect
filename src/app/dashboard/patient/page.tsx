@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
+
+export const dynamic = "force-dynamic";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { Request } from "@/lib/database";
 import { fetchUserRequests } from "@/lib/database";
 
@@ -47,14 +51,14 @@ export default function PatientDashboard() {
 
   if (authLoading || loading) {
     return (
-      <DashboardLayout title="My Requests">
+      <DashboardLayoutNew title="My Requests">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
   return (
-    <DashboardLayout title="My Requests">
+    <DashboardLayoutNew title="My Requests">
       <div className="grid gap-6">
         {userRequests.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
@@ -91,6 +95,6 @@ export default function PatientDashboard() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

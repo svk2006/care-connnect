@@ -1,8 +1,10 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { fetchAllUsers, updateUserRole, UserProfile } from "@/lib/database";
 
 const ROLES = ["patient", "receptionist", "hospital_admin", "operator", "government_admin", "master", "db_admin"];
@@ -49,14 +51,14 @@ export default function MasterDashboard() {
 
   if (loading || requestsLoading) {
     return (
-      <DashboardLayout title="Master Admin">
+      <DashboardLayoutNew title="Master Admin">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
   return (
-    <DashboardLayout title="Master Admin">
+    <DashboardLayoutNew title="Master Admin">
       <div className="grid gap-6">
         {message && (
           <div
@@ -163,6 +165,6 @@ export default function MasterDashboard() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

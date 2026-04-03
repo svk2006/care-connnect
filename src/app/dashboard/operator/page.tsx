@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { unstable_noStore as noStore } from "next/cache";
+
+export const dynamic = "force-dynamic";
 import { useRealtimeHospitals, useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { runLoadBalancer } from "@/lib/loadBalancer";
 
 export default function OperatorDashboard() {
@@ -36,14 +39,14 @@ export default function OperatorDashboard() {
 
   if (hospitalsLoading || requestsLoading) {
     return (
-      <DashboardLayout title="Operator Dashboard">
+      <DashboardLayoutNew title="Operator Dashboard">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
   return (
-    <DashboardLayout title="Operator Dashboard">
+    <DashboardLayoutNew title="Operator Dashboard">
       <div className="grid gap-6">
         {/* Load Balancer Control */}
         <div className="bg-white rounded-lg shadow p-6">
@@ -176,6 +179,6 @@ export default function OperatorDashboard() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }

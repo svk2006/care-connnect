@@ -1,8 +1,10 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRealtimeHospitals, useRealtimeRequests } from "@/hooks/useRealtime";
-import { DashboardLayout } from "@/components/Sidebar";
+import { DashboardLayoutNew } from "@/components/DashboardLayoutNew";
 import { updateHospital, Hospital } from "@/lib/database";
 
 export default function HospitalAdminDashboard() {
@@ -36,14 +38,14 @@ export default function HospitalAdminDashboard() {
 
   if (hospitalsLoading) {
     return (
-      <DashboardLayout title="Hospital Admin Dashboard">
+      <DashboardLayoutNew title="Hospital Admin Dashboard">
         <p>Loading...</p>
-      </DashboardLayout>
+      </DashboardLayoutNew>
     );
   }
 
   return (
-    <DashboardLayout title="Hospital Admin Dashboard">
+    <DashboardLayoutNew title="Hospital Admin Dashboard">
       <div className="grid gap-6">
         {message && (
           <div
@@ -171,6 +173,6 @@ export default function HospitalAdminDashboard() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutNew>
   );
 }
